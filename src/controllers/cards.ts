@@ -1,15 +1,16 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
+import { HTTP_STATUS, SERVER_ERROR_MESSAGE } from 'constants/constants';
 import Card from '../models/card';
 
 // Получить все карточки
 export const getCards = async (req: Request, res: Response) => {
   try {
     const cards = await Card.find().populate('likes');
-    res.status(200).json(cards);
+    res.status(HTTP_STATUS.OK).json(cards);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Ошибка при получении карточек' });
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: SERVER_ERROR_MESSAGE });
   }
 };
 
@@ -19,14 +20,14 @@ export const createCard = async (req: Request, res: Response) => {
     const { name, link } = req.body;
 
     if (!name || !link) {
-      return res.status(400).json({ message: 'Переданы некорректные данные' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: 'Переданы некорректные данные' });
     }
 
     const newCard = await Card.create({ name, link });
-    res.status(201).json(newCard);
+    res.status(HTTP_STATUS.CREATED).json(newCard);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Ошибка при создании карточки' });
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: SERVER_ERROR_MESSAGE });
   }
 };
 
@@ -36,20 +37,20 @@ export const deleteCard = async (req: Request, res: Response) => {
     const { cardId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(cardId)) {
-      return res.status(400).json({ message: 'Некорректный ID карточки' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: 'Некорректный ID карточки' });
     }
 
     const card = await Card.findById(cardId);
 
     if (!card) {
-      return res.status(404).json({ message: 'Карточка не найдена' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: 'Карточка не найдена' });
     }
 
     await Card.deleteOne({ _id: cardId });
-    res.status(200).json({ message: 'Карточка успешно удалена' });
+    res.status(HTTP_STATUS.OK).json({ message: 'Карточка успешно удалена' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Ошибка при удалении карточки' });
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: SERVER_ERROR_MESSAGE });
   }
 };
 
@@ -59,7 +60,7 @@ export const likeCard = async (req: Request, res: Response) => {
     const { cardId } = req.params;
 
     if (!userId || !mongoose.Types.ObjectId.isValid(cardId)) {
-      return res.status(400).json({ message: 'Некорректные данные' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: 'Некорректные данные' });
     }
 
     const updatedCard = await Card.findByIdAndUpdate(
@@ -69,13 +70,13 @@ export const likeCard = async (req: Request, res: Response) => {
     );
 
     if (!updatedCard) {
-      return res.status(404).json({ message: 'Карточка не найдена' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: 'Карточка не найдена' });
     }
 
-    res.status(200).json(updatedCard);
+    res.status(HTTP_STATUS.OK).json(updatedCard);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Ошибка при добавлении лайка' });
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: SERVER_ERROR_MESSAGE});
   }
 };
 
@@ -85,7 +86,7 @@ export const dislikeCard = async (req: Request, res: Response) => {
     const { cardId } = req.params;
 
     if (!userId || !mongoose.Types.ObjectId.isValid(cardId)) {
-      return res.status(400).json({ message: 'Некорректные данные' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: 'Некорректные данные' });
     }
 
     const updatedCard = await Card.findByIdAndUpdate(
@@ -95,12 +96,12 @@ export const dislikeCard = async (req: Request, res: Response) => {
     );
 
     if (!updatedCard) {
-      return res.status(404).json({ message: 'Карточка не найдена' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: 'Карточка не найдена' });
     }
 
-    res.status(200).json(updatedCard);
+    res.status(HTTP_STATUS.OK).json(updatedCard);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Ошибка при удалении лайка' });
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: SERVER_ERROR_MESSAGE });
   }
 };

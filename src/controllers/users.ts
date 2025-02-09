@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
-import User from '../models/user';
 import mongoose from 'mongoose';
+import { HTTP_STATUS, SERVER_ERROR_MESSAGE } from 'constants/constants';
+import User from '../models/user';
 
 // Получить всех пользователей
 export const getUsers = async (req: Request, res: Response) => {
@@ -8,7 +9,8 @@ export const getUsers = async (req: Request, res: Response) => {
     const users = await User.find();
     res.json(users);
   } catch (error) {
-    res.status(500).json({ message: 'Ошибка при получении пользователей', error });
+    console.error(error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: SERVER_ERROR_MESSAGE });
   }
 };
 
@@ -18,16 +20,16 @@ export const getUserById = async (req: Request, res: Response) => {
     const { userId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: 'Некорректный ID пользователя' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: 'Некорректный ID пользователя' });
     }
 
     const user = await User.findById(userId);
 
     if (!user) {
-      return res.status(404).json({ message: 'Пользователь не найден' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: 'Пользователь не найден' });
     }
 
-    res.status(200).json({
+    res.status(HTTP_STATUS.OK).json({
       name: user.name,
       about: user.about,
       avatar: user.avatar,
@@ -35,7 +37,7 @@ export const getUserById = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Ошибка при получении пользователя' });
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: SERVER_ERROR_MESSAGE });
   }
 };
 
@@ -43,12 +45,17 @@ export const getUserById = async (req: Request, res: Response) => {
 export const createUser = async (req: Request, res: Response) => {
   try {
     const { name, about, avatar } = req.body;
-    console.log(req.body)
+
+    if (!name || !about || !avatar) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: 'Переданы некорректные данные' });
+    }
+
     const newUser = new User({ name, about, avatar });
     await newUser.save();
-    res.status(201).json(newUser);  // Ответ с созданным пользователем
+    res.status(HTTP_STATUS.CREATED).json(newUser);  // Ответ с созданным пользователем
   } catch (error) {
-    res.status(500).json({ message: 'Ошибка при создании пользователя', error });
+    console.error(error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: SERVER_ERROR_MESSAGE });
   }
 };
 
@@ -58,7 +65,11 @@ export const updateProfile = async (req: Request, res: Response) => {
     const { name, about } = req.body;
 
     if (!userId) {
-      return res.status(401).json({ message: 'Пользователь не авторизован' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: 'Переданы некорректные данные' });
+    }
+
+    if (!name || !about) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: 'Переданы некорректные данные' });
     }
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -68,12 +79,13 @@ export const updateProfile = async (req: Request, res: Response) => {
     );
 
     if (!updatedUser) {
-      return res.status(404).json({ message: 'Пользователь не найден' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: 'Пользователь не найден' });
     }
 
-    res.status(200).json(updatedUser);
+    res.status(HTTP_STATUS.OK).json(updatedUser);
   } catch (error) {
-    res.status(500).json({ message: 'Ошибка при обновлении пользователя', error });
+    console.error(error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: SERVER_ERROR_MESSAGE });
   }
 };
 
@@ -82,8 +94,8 @@ export const updateAvatar = async (req: Request, res: Response) => {
     const userId = req.user?._id;
     const { avatar } = req.body;
 
-    if (!userId) {
-      return res.status(401).json({ message: 'Пользователь не авторизован' });
+    if (!userId || !avatar) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: 'Переданы некорректные данные' });
     }
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -93,11 +105,12 @@ export const updateAvatar = async (req: Request, res: Response) => {
     );
 
     if (!updatedUser) {
-      return res.status(404).json({ message: 'Пользователь не найден' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: 'Пользователь не найден' });
     }
 
-    res.status(200).json(updatedUser);
+    res.status(HTTP_STATUS.OK).json(updatedUser);
   } catch (error) {
-    res.status(500).json({ message: 'Ошибка при обновлении аватара', error });
+    console.error(error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: SERVER_ERROR_MESSAGE });
   }
 };
