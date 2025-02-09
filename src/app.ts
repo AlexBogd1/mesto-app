@@ -5,7 +5,7 @@ import router from './routes';
 
 dotenv.config();
 
-const { PORT = 3001, MONGO_DB_URL = 'mongodb://localhost:27017/mestoApp' } = process.env;
+const { PORT = 3000, MONGO_DB_URL = 'mongodb://localhost:27017/mestoApp' } = process.env;
 
 mongoose.connect(MONGO_DB_URL);
 
