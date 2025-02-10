@@ -23,7 +23,7 @@ export const createCard = async (req: Request, res: Response) => {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: 'Переданы некорректные данные' });
     }
 
-    const newCard = await Card.create({ name, link });
+    const newCard = await Card.create({ name, link, owner: req.user._id });
     res.status(HTTP_STATUS.CREATED).json(newCard);
   } catch (error) {
     console.error(error);
@@ -35,6 +35,7 @@ export const createCard = async (req: Request, res: Response) => {
 export const deleteCard = async (req: Request, res: Response) => {
   try {
     const { cardId } = req.params;
+    const userId = req.user?._id;
 
     if (!mongoose.Types.ObjectId.isValid(cardId)) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: 'Некорректный ID карточки' });
@@ -44,6 +45,11 @@ export const deleteCard = async (req: Request, res: Response) => {
 
     if (!card) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ message: 'Карточка не найдена' });
+    }
+
+    // Проверка владельца карточки
+    if (card.owner.toString() !== userId?.toString()) {
+      return res.status(HTTP_STATUS.FORBIDDEN).json({ message: 'Недостаточно прав для удаления карточки' });
     }
 
     await Card.deleteOne({ _id: cardId });
