@@ -7,4 +7,5 @@ export const HTTP_STATUS = {
   INTERNAL_SERVER_ERROR: 500,
 };
 
+
 export const SERVER_ERROR_MESSAGE= 'На сервере произошла ошибка';
